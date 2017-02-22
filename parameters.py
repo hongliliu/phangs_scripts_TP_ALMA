@@ -8,7 +8,7 @@ pipeline   = False
 # Additional plots, non-interactive
 doplots    = True   
 
-#Number of EB files to be used
+#Number of EB files to be used. Useful when we want to obtain a first look of the image.
 doEBs      = 0   #0 to take all
 
 # Source
