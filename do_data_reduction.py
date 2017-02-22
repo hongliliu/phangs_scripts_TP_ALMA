@@ -41,5 +41,3 @@ for h in range(len(EBsnames)):
 if 7 in do_step: imaging(source,name_line,diameter,fwhmfactor,doplots,doEBs=4)
 if 8 in do_step: export_fits(name_line,source)
 
-#Clean folder
-os.system('rm -rf *.tsys')
