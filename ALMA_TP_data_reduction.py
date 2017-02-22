@@ -357,7 +357,6 @@ def extract_jyperk(filename,pipeline):
                     val_arr.append(line_arr[4][0:line_arr[4].index('\n')])       
         jyperk = {k: {e:{'mean':{}} for e in np.unique(spw_arr)} for k in np.unique(ant_arr)}
         for i in range(12): jyperk[ant_arr[i]][spw_arr[i]]['mean']= float(val_arr[i])
-    
     else:  
         file_script = '../script/'+filename+'.scriptForSDCalibration.py'   
         with open(file_script) as f: lines_f = f.readlines()
@@ -373,9 +372,9 @@ def extract_jyperk(filename,pipeline):
                         else:
                             file_jyperk.write((lines_f[ll])[ss2:len(lines_f[ll])])
                             ll = ll+1
-        file_jyperk.close()
+            file_jyperk.close()
     
-    exec open('../script/file_jyperk.py').read()
+    if os.path.exists('../script/file_jyperk.py'): execfile('../script/file_jyperk.py') #exec open('../script/file_jyperk.py').read()
     return jyperk
 
 def read_source_coordinates(filename,source):
@@ -514,9 +513,11 @@ def import_and_split_ant(filename,doplots=False):
 # Step 2  Generate Tsys and apply flagging 
 #-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-def gen_tsys_and_flag(filename,spws_info,doplots=False,pipeline):
+def gen_tsys_and_flag(filename,spws_info,pipeline,doplots=False):
     
+    print "========================================================"
     print " Step 2  Generate Tsys and apply flagging"
+    print "========================================================"
     
     # 2.1 Generation of the Tsys cal table
     print " 2.1 Generating Tsys calibration table"
@@ -841,7 +842,4 @@ def export_fits(name_line,source):
                fitsimage = 'ALMA_TP.'+source+'.'+name_line+'.image.fits')
     exportfits(imagename = 'ALMA_TP.'+source+'.'+name_line+'.image.weight', 
                fitsimage = 'ALMA_TP.'+source+'.'+name_line+'.image.weight.fits')
-
-
-
 
