@@ -6,8 +6,8 @@ In raw folder:
 
 CASA> execfile('do_data_reduction.py')
 
-* parameters: contain all parameters specific to a project
+- parameters: contain all parameters specific to a project
+- do_data_reduction: script to be called for data reduction
+- ALMA_TP_data_reduction: routines for data reduction.
 
-* do_data_reduction: script to be called for data reduction
-
-* ALMA_TP_data_reduction: routines for data reduction.
+Still needs to be tested for the newest ALMA TP data and ALMA pipeline rediced data.
