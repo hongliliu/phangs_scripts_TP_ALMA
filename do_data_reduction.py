@@ -8,7 +8,7 @@ execfile(path_script+'ALMA_TP_data_reduction.py')           # All procedures for
 
 
 # Data reduction
-do_step = [5,6]
+do_step = [1,2,3]
 # 1: import_and_split_ant - Import data to MS and split by antenna    (adsm -> asap)
 # 2: gen_tsys_and_flag    - Generate tsys cables and apply flags      (create .tsys and swpmap)
 # 3: counts2kelvin        - Calibration of Tsys and convert data to K (asap -> asap.2)
@@ -19,20 +19,28 @@ do_step = [5,6]
 # 8: export_fits          - Export image and weight to a fits file    (image -> fits)
 
 # Defining EB names
-EBsnames = [f for f in os.listdir(path_script) if f.endswith('.scriptForSDCalibration.py')]
+if pipeline == True:
+    EBsnames = [f for f in os.listdir('.') if f.endswith('.asdm.sdm')]
+else:
+    EBsnames = [f for f in os.listdir(path_script) if f.endswith('.scriptForSDCalibration.py')]
+
+if len(do_step) == 0: do_step = [1,2,3,4,5,6,7,8]
 
 for h in range(len(EBsnames)):
     
-    filename = 'u'+re.search('u(.+?).script', EBsnames[h]).group(1)
+    if pipeline == True:
+        filename = 'u'+re.search('u(.+?).asdm.sdm', EBsnames[h]).group(1)+'.ms'
+    else:
+        filename = 'u'+re.search('u(.+?).script', EBsnames[h]).group(1)
     file_exists = check_exists(filename)
     if file_exists == True:
          
+        if 1 in do_step: import_and_split_ant(filename,doplots)  
         vec_ants   = read_ants_names(filename)                       # Read vector with name of antennas
         vel_source = read_vel_source(filename,source)                # Read source velocity
         spws_info  = read_spw(filename,source)                       # Read information of spws (science and Tsys)
-        
-        if 1 in do_step: import_and_split_ant(filename,doplots)                      
-        if 2 in do_step: spwmap = gen_tsys_and_flag(filename,spws_info,doplots,pipeline) 
+
+        if 2 in do_step: spwmap = gen_tsys_and_flag(filename,spws_info,pipeline,doplots) 
         for ant in vec_ants: 
             if 3 in do_step: counts2kelvin(filename,ant,spwmap,spws_info,doplots)
             if 4 in do_step: extract_cube(filename,source,ant,freq_rest,vel_source,spws_info,vel_cube,doplots) 
