@@ -10,4 +10,6 @@ CASA> execfile('do_data_reduction.py')
 - do_data_reduction: script to be called for data reduction
 - ALMA_TP_data_reduction: routines for data reduction.
 
-Still needs to be tested for the newest ALMA TP data and ALMA pipeline rediced data.
+Still to be done:
+- debug when files are not found, etc.
+
