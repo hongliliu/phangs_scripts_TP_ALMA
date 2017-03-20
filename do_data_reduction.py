@@ -1,6 +1,7 @@
 #
 #  Start "casapy470 --pipeline" in RAW folder and run:
 #  execfile('../script/do_data_reduction.py')
+#  Please modify "do_step" with the number of the step you want to perform.
 #
 #-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
