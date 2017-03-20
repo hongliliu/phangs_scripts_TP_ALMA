@@ -1,14 +1,14 @@
 #-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 # ALMA Total Power Data Reduction Script
-# Original calibration script modified by C. Herrera 12/01/2017
+# Original ALMA calibration script modified by C. Herrera 12/01/2017
 # 
-# Last modifications 
-# Add read_source_coordinates 31/01/2017
-# More than 1 line can be defined to be excluded for baseline corrections 01/02/2017
-# Handle TOPO ALMA frame vs the given LSRK velocity for extraction of cube and baseline 02/02/2017 
+# Last modifications: 
+# - read_source_coordinates 31/01/2017
+# - More than 1 line can be defined to be excluded for baseline corrections 01/02/2017
+# - Handle TOPO ALMA frame vs the given LSRK velocity for extraction of cube and baseline 02/02/2017 
 #
 # Still need to do
-# - Different erros when files are not found, etc.
+# - Work on errors when files are not found, etc.
 #
 #-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
@@ -138,7 +138,7 @@ def read_ants_names(filename):
     
     return vec_ants
 
-# Correct the Tsysmap
+# Correct the Tsysmap (useful for old data)
 def get_tsysmap(tsysmap,spws_scie,spws_tsys,freq_rep_scie,freq_rep_tsys):
     
     for i in range(len(freq_rep_scie)): 
@@ -150,7 +150,7 @@ def get_tsysmap(tsysmap,spws_scie,spws_tsys,freq_rep_scie,freq_rep_tsys):
     for i in range(len(spws_scie)): print spws_scie[i],tsysmap[spws_scie[i]]
     return tsysmap
 
-# Read spw information
+# Read spw information (source and Tsys)
 def read_spw(filename,source):
     
     # Tsys spws (index)
@@ -229,14 +229,27 @@ def get_spw_line(vel_source,freq_rest,spws_info):
         print "** Requested line with rest frequency "+str(freq_rest/1e3)+" GHz is not on the data **"
         return False
 
-# Extract flagging from original data reduction file
+# Extract flagging from original data reduction file.
 def extract_flagging(filename,pipeline):
 
     os.system('rm ../script/file_flags.py')
     file_flag = open('../script/file_flags.py', 'w')
  
     if pipeline == True: 
-        print "No file with flagging because pipeline data reduction."
+ 	if os.path.exists('../script/file_flag_pipe.py') == False:        
+	    print "No flagging will be done. If you want to flag something, please create a file ../script/file_flag_pipe.py"
+            print "with the specific flags using the task sdflag."	
+            print "Example: "
+            print "sdflag(infile = 'uid___A002_X9998b8_X5d5.ms.PM04.asap',"
+            print "  mode = 'manual',"
+            print "  spw = '19:0~119;3960~4079,21:0~500;3960~4079',"
+            print "  overwrite = True)"
+        else:
+            print "Reading file ../script/file_flag_pipe.py for flagging"
+            file_script = '../script/file_flag_pipe.py'
+            with open(file_script) as f: lines_f = f.readlines()
+            for i in range(len(lines_f)): file_flag.write(lines_f[i])
+            print "Flags saved in script/file_flags.py"
     else:  
         file_script = '../script/'+filename+'.scriptForSDCalibration.py'  
         with open(file_script) as f: lines_f = f.readlines()
@@ -318,6 +331,7 @@ def convert_vel2chan_line(filename_in,freq_rest,vel_line,spw_line,coords,date):
     
     return min(chan1,chan2),max(chan1,chan2),nchan
 
+# Create string with spw and channel for baseline correction 
 def str_spw4baseline(filename_in,freq_rest,vel_line,spw_line,coords):
     
     filename = re.search('(.+?).ms',filename_in).group(0)
@@ -356,7 +370,7 @@ def extract_jyperk(filename,pipeline):
                     spw_arr.append(int(line_arr[2]))
                     val_arr.append(line_arr[4][0:line_arr[4].index('\n')])       
         jyperk = {k: {e:{'mean':{}} for e in np.unique(spw_arr)} for k in np.unique(ant_arr)}
-        for i in range(12): jyperk[ant_arr[i]][spw_arr[i]]['mean']= float(val_arr[i])
+        for i in range(len(ant_arr)): jyperk[ant_arr[i]][spw_arr[i]]['mean']= float(val_arr[i])
     else:  
         file_script = '../script/'+filename+'.scriptForSDCalibration.py'   
         with open(file_script) as f: lines_f = f.readlines()
@@ -377,30 +391,20 @@ def extract_jyperk(filename,pipeline):
     if os.path.exists('../script/file_jyperk.py'): execfile('../script/file_jyperk.py') #exec open('../script/file_jyperk.py').read()
     return jyperk
 
+# Read source coordinates
 def read_source_coordinates(filename,source):
     
-    source = get_sourcename(filename)
-    mytb   = createCasaTool(tbtool)
-    mytb.open(filename + '/FIELD')
-    names  = mytb.getcol('NAME')
-    dir_RA = (mytb.getcol('REFERENCE_DIR')[0])[0]
-    dir_DE = (mytb.getcol('REFERENCE_DIR')[1])[0]
-    mytb.close()
-    
-    ss    = np.where(names == source)
-    RA    = (np.degrees(dir_RA[ss])[0]+360)/15
-    DEC   = np.degrees(dir_DE[ss])[0]
-    RA_h  = int(RA)
-    RA_m  = int(60*(RA-RA_h))
-    RA_s  = 60*(60*(RA-RA_h)-RA_m)
-    DEC_x = int(np.sign(DEC))
-    DEC   = abs(DEC)
-    DEC_d = int(DEC)*DEC_x
-    DEC_m = int(60*(DEC-int(DEC)))
-    DEC_s = 60*(60*(DEC-int(DEC))-DEC_m)
-    coord = "J2000  "+str(RA_h)+"h"+str(RA_m)+"m"+str(RA_s)+" "+str(DEC_d)+"d"+str(DEC_m)+"m"+str(DEC_s)
+    coord_source = aU.getRADecForSource(filename,source)
+    RA_h  = (coord_source.split(' ')[0]).split(':')[0]
+    RA_m  = (coord_source.split(' ')[0]).split(':')[1]
+    RA_s  = (coord_source.split(' ')[0]).split(':')[2]
+    DEC_d = (coord_source.split(' ')[1]).split(':')[0]
+    DEC_m = (coord_source.split(' ')[1]).split(':')[1] 
+    DEC_s = (coord_source.split(' ')[1]).split(':')[2]
+    coord = "J2000  "+str(RA_h)+"h"+str(RA_m)+"m"+str(RA_s[0:6])+" "+str(DEC_d)+"d"+str(DEC_m)+"m"+str(DEC_s)
     return coord
 
+# Get source name
 def get_sourcename(filename):
     
     mytb   = createCasaTool(msmdtool)
@@ -410,6 +414,7 @@ def get_sourcename(filename):
     
     return source
 
+# Create string of spws to apply the Tsys
 def str_spw_apply_tsys(spws_info):
     #science spws
     spws_scie,spws_tsys,freq_rep_scie,freq_rep_tsys = spws_info[0:4]
@@ -422,6 +427,21 @@ def str_spw_apply_tsys(spws_info):
     
     return spws_scie_str,spws_tsys_str,spws_all_str
 
+# Check date of observations to decide if the non-linearity correction should be applied or not.
+def check_date_nonlinearity(filename):
+    
+    date_obs    = aU.getObservationStart(filename)/24/60/60.
+    date_change = aU.dateStringToMJD('2015/10/01 00:00:00')
+    
+    if abs(date_obs-date_change) <= 1: print "Data obtained within 1 day of the change, be careful!"    
+    if date_obs >= date_change: 
+        print "Data obtained after 2015/10/01, non-linearity not applied"
+        return False
+    if date_obs < date_change:  
+        print "Data obtained before 2015/10/01, non-linearity applied"
+        return True
+
+#-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 #-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 # Data reduction steps
 #-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -526,6 +546,8 @@ def gen_tsys_and_flag(filename,spws_info,pipeline,doplots=False):
     gencal(vis = filename, caltable = filename+'.tsys', caltype = 'tsys')
     
     # 2.2 Create png plots of CASA Tsys and bandpass solution
+    os.system('rm -rf plots/'+filename+'.tsys.plots.overlayTime/'+filename+'.tsys')
+    
     if doplots == True:
         os.system('rm -Rf plots/'+filename+'.tsys.plots.overlayTime/'+filename+'.tsys')
         plotbandpass(caltable=filename+'.tsys', 
@@ -543,6 +565,7 @@ def gen_tsys_and_flag(filename,spws_info,pipeline,doplots=False):
         
         # Create png plots for Tsys per source with antennas
         es.checkCalTable(filename+'.tsys', msName=filename, interactive=False)
+	os.system('rm -rf plots/'+filename+'.tsys.plots') 
         os.system('mv '+filename+'.tsys.plots  plots/.') 
     
     # 2.3 Do initial flagging 
@@ -602,15 +625,16 @@ def counts2kelvin(filename,ant,spwmap,spws_info,doplots=False):
             outfile = filename_out,
             overwrite = True)
     
-    os.system('mv '+filename_out+'  plots/.')
     if doplots == True: es.SDcheckSpectra(filename_out, spwIds=spws_scie_str, interactive=False)
     
-    print "3.2 Applying non-linearity correction factor"  
+    print "3.2 Applying non-linearity correction factor if data were obtained before the 2015-10-01"  
     
-    sdscale(infile = filename_out,
-            outfile = filename_out,
-            factor = 1.25,
-            overwrite=True)
+    apply_nl = check_date_nonlinearity(filename)
+    if apply_nl == True:
+        sdscale(infile = filename_out,
+                outfile = filename_out,
+                factor = 1.25,
+                overwrite=True)
 
 
 #-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -629,9 +653,9 @@ def extract_cube(filename,source,ant,freq_rest,vel_source,spws_info,vel_cube,dop
     filename_in  = filename+'.'+ant+fin
     filename_out = filename+'.'+ant+finout
     
-    #Plotting the line
+    # Plotting the line
     if doplots == True: 
-        print "4.1 Plotting each IF for each antenna"
+        print "4.1 Plotting each spw for each antenna"
         sdplot(infile=filename+'.'+ant+fin,plottype='spectra', specunit='channel', timeaverage=True,stack='p')
     
     # Get the spw where the requested line is located
@@ -670,6 +694,7 @@ def extract_cube(filename,source,ant,freq_rest,vel_source,spws_info,vel_cube,dop
 #-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 # Step 5 Baseline correction
 #-*-*-*-*-*-*-*-*-*-*
+
 def baseline(filename,source,ant,freq_rest,vel_source,spws_info,vel_line,bl_order):
     print "================================"
     print "= Step 5 - Baseline correction ="
@@ -700,13 +725,15 @@ def baseline(filename,source,ant,freq_rest,vel_source,spws_info,vel_line,bl_orde
            overwrite = True)  
     
     if doplots == True:
-        # PLotting the result from the baseline correction. Spectra avergarfed in time    
+        # PLotting the result from the baseline correction. Spectra avergarfed in time  
+    	os.system('rm -Rf plots/'+filename_out+'_baseline_corrected.png')
         sdplot(infile=filename_out,
                plottype='spectra', 
                specunit='km/s', 
                restfreq=str(freq_rest)+'MHz', 
                timeaverage=True, 
                stack='p',
+               outfile='plots/'+filename_out+'_baseline_corrected.png',
                polaverage=True)
 
     os.system('mv  *blparam.txt  obs_lists/')
@@ -766,7 +793,7 @@ def concat_ants(filename,vec_ants,vel_source,freq_rest,spws_info,pipeline):
 #-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 # Step 7 - Imaging
 #-*-*-*-*-*-*-*-*-*-*
-def imaging(source,name_line,diameter,fwhmfactor,doplots=False,doEBs=0):
+def imaging(source,name_line,phcenter,vel_source,source_vel_kms,vwidth_kms,chan_dv_kms,restfreq_ghz,diameter,fwhmfactor,doplots=False,doEBs=0):
     
     print "===================="
     print "= Step 7 - Imaging ="
@@ -776,37 +803,65 @@ def imaging(source,name_line,diameter,fwhmfactor,doplots=False,doEBs=0):
     path = '.'
     Msnames = [f for f in os.listdir(path) if f.endswith('.cal.jy')]
     
-    #Check how many EBs you want to use
+    # Check how many EBs you want to use
     if doEBs !=0 : Msnames = Msnames[0:doEBs]
 
-    #Coordinate of phasecenter 
-    coord_phase = read_source_coordinates(Msnames[0],source)
-
+    # Coordinate of phasecenter read from the data or used as input
+    if phcenter == False:
+        coord_phase = read_source_coordinates(Msnames[0],source)
+        print "Coordinate of phasecenter data"
+        print coord_phase
+    else:
+        print "Coordinate of phasecenter script"
+        coord_phase = phcenter
+        print coord_phase
+    
+    # Source velocity for imaging, read from the data or used as input
+    if source_vel_kms == False:
+        source_vel_kms = vel_source
+        print "Velocity of source used for imaging:"
+        print source_vel_kms
+    else:
+        print "Velocity of source used for imaging:"
+        source_vel_kms = source_vel_kms 
+        print source_vel_kms
+    
     # Definition of parameters for imaging
     xSampling,ySampling,maxsize = aU.getTPSampling(Msnames[0],showplot=False)
     
+    # Read frequency
     msmd.open(Msnames[0])
     freq = msmd.meanfreq(0)
     msmd.close()
     
     theorybeam = fwhmfactor*c_light*1e3/freq/diameter*180/pi*3600
     cell       = theorybeam/9.0
-    imsize     = int(round(maxsize/cell)*1.3)   #int(round(maxsize/cell)*2) - smaller image than the one given by ALMA
+    imsize     = int(round(maxsize/cell)*1.5)   #int(round(maxsize/cell)*2) - smaller image than the one given by ALMA
+    
+    start_vel      = source_vel_kms-vwidth_kms/2
+    nchans_vel     = int(round(vwidth_kms/chan_dv_kms))
     
     os.system('rm -Rf ALMA_TP.'+source+'.'+name_line+'.image')
     
     print "Start imaging"
     sdimaging(infiles = Msnames,
-        mode = 'channel',
+        mode = 'velocity',
+        nchan = nchans_vel,
+        width = str(chan_dv_kms)+'km/s',
+        start = str(start_vel)+'km/s',
+        veltype="radio",
         outframe = 'LSRK',
+        restfreq = str(restfreq_ghz)+'GHz',
         gridfunction = 'SF',
         convsupport = 6,
         phasecenter = coord_phase,
-        imsize = imsize,
+        imsize = imsize,        
         cell = str(cell)+'arcsec',
         overwrite = True,
         outfile = 'ALMA_TP.'+source+'.'+name_line+'.image')
+
     
+    print imsize
     # Correct the brightness unit in the image header  
     imhead(imagename = 'ALMA_TP.'+source+'.'+name_line+'.image',
         mode = 'put',
@@ -842,4 +897,7 @@ def export_fits(name_line,source):
                fitsimage = 'ALMA_TP.'+source+'.'+name_line+'.image.fits')
     exportfits(imagename = 'ALMA_TP.'+source+'.'+name_line+'.image.weight', 
                fitsimage = 'ALMA_TP.'+source+'.'+name_line+'.image.weight.fits')
+
+
+
 
