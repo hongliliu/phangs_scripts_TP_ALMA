@@ -4,7 +4,7 @@
 # 
 # Last modifications: 
 # - read_source_coordinates 31/01/2017
-# - More than 1 line can be defined to be excluded for baseline corrections 01/02/2017
+# - More than 1 line can be defined to be excluded for baseline corrections 01/02/2017 (bug fixed 21/03/2017)
 # - Handle TOPO ALMA frame vs the given LSRK velocity for extraction of cube and baseline 02/02/2017 
 #
 # Still need to do
@@ -340,14 +340,19 @@ def str_spw4baseline(filename_in,freq_rest,vel_line,spw_line,coords):
     date = (date.split()[0]).replace('-','/')+'/'+date.split()[1]
     vel_line_s = vel_line.split(';')
     nlines = len(vel_line_s)
-    spw_extr = str(spw_line)+":0~"
+    channels_v = range(nlines*2)
     for i in range(nlines):
         vel_str = vel_line_s[i]
         chan1_line,chan2_line,nchan_line = convert_vel2chan_line(filename_in,freq_rest,vel_str,spw_line,coords,date)
-        
-        # String to define spws for baseline correction
-        spw_extr = spw_extr+str(chan1_line)+";"+str(chan2_line)+"~"
-    spw_extr = spw_extr+str(nchan_line)
+        channels_v[2*i+1] = chan2_line
+        channels_v[2*i]   = chan1_line
+    channels_v.sort()
+    # String to define spws for baseline correction
+    spw_extr = str(spw_line)+":0~"+str(channels_v[0])+";"
+    if nlines > 1:
+        for i in range(nlines-1):
+            spw_extr = spw_extr + str(channels_v[2*i+1])+"~"+ str(channels_v[2*i+2])+";"
+    spw_extr = spw_extr + str(channels_v[-1])+"~"+str(max(channels_v[-1],nchan))
     
     return spw_extr
 
