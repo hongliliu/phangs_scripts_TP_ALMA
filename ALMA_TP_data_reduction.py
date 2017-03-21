@@ -352,7 +352,7 @@ def str_spw4baseline(filename_in,freq_rest,vel_line,spw_line,coords):
     if nlines > 1:
         for i in range(nlines-1):
             spw_extr = spw_extr + str(channels_v[2*i+1])+"~"+ str(channels_v[2*i+2])+";"
-    spw_extr = spw_extr + str(channels_v[-1])+"~"+str(max(channels_v[-1],nchan))
+    spw_extr = spw_extr + str(channels_v[-1])+"~"+str(max(channels_v[-1],nchan_line))
     
     return spw_extr
 
