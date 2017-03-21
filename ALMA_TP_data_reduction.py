@@ -338,7 +338,7 @@ def str_spw4baseline(filename_in,freq_rest,vel_line,spw_line,coords):
     
     date = aU.getObservationStartDate(filename)
     date = (date.split()[0]).replace('-','/')+'/'+date.split()[1]
-    vel_line_s = vel_line.split(':')
+    vel_line_s = vel_line.split(';')
     nlines = len(vel_line_s)
     spw_extr = str(spw_line)+":0~"
     for i in range(nlines):
