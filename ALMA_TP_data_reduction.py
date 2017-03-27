@@ -6,7 +6,7 @@
 # - read_source_coordinates 31/01/2017
 # - More than 1 line can be defined to be excluded for baseline corrections 01/02/2017 (bug fixed 21/03/2017)
 # - Handle TOPO ALMA frame vs the given LSRK velocity for extraction of cube and baseline 02/02/2017 
-#
+# - 27.03.2017: extract_jyperk. It was not working for Cycle 1 data.
 # Still need to do
 # - Work on errors when files are not found, etc.
 #
@@ -359,9 +359,6 @@ def str_spw4baseline(filename_in,freq_rest,vel_line,spw_line,coords):
 # Extract variable jyperk, used to convert from K to Jy.
 def extract_jyperk(filename,pipeline):
     
-    os.system('rm ../script/file_jyperk.py')
-    file_jyperk = open('../script/file_jyperk.py', 'w')
-    
     if pipeline == True: 
         file_script = '../calibration/jyperk.csv'
         ant_arr = []
@@ -376,8 +373,10 @@ def extract_jyperk(filename,pipeline):
                     val_arr.append(line_arr[4][0:line_arr[4].index('\n')])       
         jyperk = {k: {e:{'mean':{}} for e in np.unique(spw_arr)} for k in np.unique(ant_arr)}
         for i in range(len(ant_arr)): jyperk[ant_arr[i]][spw_arr[i]]['mean']= float(val_arr[i])
+        return jyperk
     else:  
         file_script = '../script/'+filename+'.scriptForSDCalibration.py'   
+        vec_jyperk = ''
         with open(file_script) as f: lines_f = f.readlines()
         with open(file_script) as f:
             for i, line in enumerate(f):
@@ -387,14 +386,14 @@ def extract_jyperk(filename,pipeline):
                     while len(lines_f[ll].split()) != 0: 
                         if ll == i+1: ss2 = lines_f[ll].index("{")
                         if ll == i: 
-                            file_jyperk.write((lines_f[ll])[ss:len(lines_f[ll])]) 
+                            vec_jyperk = vec_jyperk+(lines_f[ll])[ss:len(lines_f[ll])]
                         else:
-                            file_jyperk.write((lines_f[ll])[ss2:len(lines_f[ll])])
-                            ll = ll+1
-            file_jyperk.close()
-    
-    if os.path.exists('../script/file_jyperk.py'): execfile('../script/file_jyperk.py') #exec open('../script/file_jyperk.py').read()
-    return jyperk
+                            vec_jyperk = vec_jyperk+(lines_f[ll])[ss2:len(lines_f[ll])]
+                        ll = ll+1
+        kw = {}
+        exec(vec_jyperk) in kw
+        jyperk = kw['jyperk']
+        return jyperk
 
 # Read source coordinates
 def read_source_coordinates(filename,source):
