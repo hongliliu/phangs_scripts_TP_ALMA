@@ -31,7 +31,11 @@ if len(do_step) == 0: do_step = [1,2,3,4,5,6,7,8]
 
 for EBs in EBsnames:
     
-    filename = 'u'+re.search('u(.+?).asdm.sdm', EBs).group(1)+'.ms'
+    if pipeline == False:
+        EBs = EBs.replace('.ms.scriptForSDCalibration.py', '.asdm.sdm')
+    
+    filename = 'u'+re.search('u(.+?).asdm.sdm', EBs).group(1)+'.ms'   
+    
     file_exists = check_exists(filename)
     
     if file_exists == True:
