@@ -7,7 +7,10 @@
 # - More than 1 line can be defined to be excluded for baseline corrections 01/02/2017 (bug fixed 21/03/2017)
 # - Handle TOPO ALMA frame vs the given LSRK velocity for extraction of cube and baseline 02/02/2017 
 # - 27.03.2017: extract_jyperk. It was not working for Cycle 1 data.
-# Still need to do
+# - 26.07.2017: add flag of 7m antennas (CM#)
+# - 26.07.2017: correct spw Tsys value associated with the averaged spw science value (tsysmap[spws_scie[i]+1] = spws_tsys[i]-> tsysmap[spws_scie[i]+1] = spws_tsys[ddif.argmin()])
+# - 26.07.2017: modified convert_vel2chan_line, because some asap files had mixed the IFs, having IFNO and IFID different.
+# Still need to do:
 # - Work on errors when files are not found, etc.
 #
 #-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -145,7 +148,7 @@ def get_tsysmap(tsysmap,spws_scie,spws_tsys,freq_rep_scie,freq_rep_tsys):
         diff = [abs(freq_rep_tsys[j] - freq_rep_scie[i]) for j in range(len(freq_rep_tsys))]
         ddif = np.array(diff)
         tsysmap[spws_scie[i]]   = spws_tsys[ddif.argmin()]
-        tsysmap[spws_scie[i]+1] = spws_tsys[i]
+        tsysmap[spws_scie[i]+1] = spws_tsys[ddif.argmin()]
     print "Final map used for the observations: (they should have the same frequency)"
     for i in range(len(spws_scie)): print spws_scie[i],tsysmap[spws_scie[i]]
     return tsysmap
@@ -297,7 +300,7 @@ def convert_vel2chan(filename,freq_rest,vel_cube,spw_line,vel_source,spws_info,c
     
     return min(chan1,chan2),max(chan1,chan2) 
 
-# Convert the given velocity to channels (using ASAP file)
+# Convert the given velocity to channels (using ASAP file with unique spw)
 def convert_vel2chan_line(filename_in,freq_rest,vel_line,spw_line,coords,date):
    
     vel1 = float((vel_line.split('~'))[0])
@@ -319,12 +322,18 @@ def convert_vel2chan_line(filename_in,freq_rest,vel_line,spw_line,coords,date):
     mytb  = createCasaTool(tbtool)
     mytb.open(filename_in)
     nchan = mytb.getkeyword('nChan')
+    if_eq = mytb.getcol('FREQ_ID',startrow=1,nrow=1)
+    bandw = mytb.getkeyword('Bandwidth')
     mytb.close()
     
     mytb.open(filename_in+'/FREQUENCIES')   
-    freq_chan0 = mytb.getcol('REFVAL',startrow=spw_line,nrow=1)/1e6
-    chan_width = mytb.getcol('INCREMENT',startrow=spw_line,nrow=1)/1e6
+    freq_chanref = mytb.getcol('REFVAL',startrow=if_eq,nrow=1)/1e6
+    chanref      = mytb.getcol('REFPIX',startrow=if_eq,nrow=1)
+    chan_width   = mytb.getcol('INCREMENT',startrow=if_eq,nrow=1)/1e6
     mytb.close()
+    
+    freq_chan0 = freq_chanref-chanref*chan_width
+#    chan_width = bandw/nchan
     
     chan1 = int(round((freq1_topo-freq_chan0)/chan_width))
     chan2 = int(round((freq2_topo-freq_chan0)/chan_width))
@@ -514,11 +523,23 @@ def import_and_split_ant(filename,doplots=False):
         inpmode = 'table',
         useapplied = True,
         action = 'apply')
-    
+
+    # If there are, flag 7m antennas
+    vec_ants   = read_ants_names(filename)
+    ants_7m = [s for s in vec_ants if "CM" in s]
+    if len(ants_7m) > 0: 
+        str_ants = ', '.join(ants_7m)
+        flagdata(vis = filename,
+                 mode = 'manual',
+                 antenna = str_ants,
+                 action = 'apply')
+
+
     # 1.4 Split by antenna 
     fin = '.asap'
 
-    vec_ants   = read_ants_names(filename)
+    vec_ants_t  = read_ants_names(filename)
+    vec_ants    = [s for s in vec_ants_t if any(xs in s for xs in ['PM','DV'])]
     for ant in vec_ants :
         os.system('rm -Rf '+filename+'.'+ant+fin)
     
@@ -659,8 +680,9 @@ def extract_cube(filename,source,ant,freq_rest,vel_source,spws_info,vel_cube,dop
     
     # Plotting the line
     if doplots == True: 
+        os.system('rm -Rf plots/'+filename+'.'+ant+fin+'.spec.png')
         print "4.1 Plotting each spw for each antenna"
-        sdplot(infile=filename+'.'+ant+fin,plottype='spectra', specunit='channel', timeaverage=True,stack='p')
+        sdplot(infile=filename+'.'+ant+fin,plottype='spectra', specunit='channel', timeaverage=True,stack='p',outfile='plots/'+filename+'.'+ant+fin+'.spec.png')
     
     # Get the spw where the requested line is located
     spw_line = get_spw_line(vel_source,freq_rest,spws_info)
@@ -806,29 +828,9 @@ def imaging(source,name_line,phcenter,vel_source,source_vel_kms,vwidth_kms,chan_
     # Search for files already calibrated
     path = '.'
     Msnames = [f for f in os.listdir(path) if f.endswith('.cal.jy')]
-    
+       
     # Check how many EBs you want to use
     if doEBs !=0 : Msnames = Msnames[0:doEBs]
-
-    # Coordinate of phasecenter read from the data or used as input
-    if phcenter == False:
-        coord_phase = read_source_coordinates(Msnames[0],source)
-        print "Coordinate of phasecenter data"
-        print coord_phase
-    else:
-        print "Coordinate of phasecenter script"
-        coord_phase = phcenter
-        print coord_phase
-    
-    # Source velocity for imaging, read from the data or used as input
-    if source_vel_kms == False:
-        source_vel_kms = vel_source
-        print "Velocity of source used for imaging:"
-        print source_vel_kms
-    else:
-        print "Velocity of source used for imaging:"
-        source_vel_kms = source_vel_kms 
-        print source_vel_kms
     
     # Definition of parameters for imaging
     xSampling,ySampling,maxsize = aU.getTPSampling(Msnames[0],showplot=False)
@@ -837,6 +839,26 @@ def imaging(source,name_line,phcenter,vel_source,source_vel_kms,vwidth_kms,chan_
     msmd.open(Msnames[0])
     freq = msmd.meanfreq(0)
     msmd.close()
+    
+    # Coordinate of phasecenter read from the data or used as input
+    if phcenter == False:
+        coord_phase = read_source_coordinates(Msnames[0],source)
+        print "Coordinate of phasecenter, read from the data"
+        print coord_phase
+    else:
+        print "Coordinate of phasecenter, gave by the user in the parameter.py script"
+        coord_phase = phcenter
+        print coord_phase
+    
+    # Source velocity for imaging, read from the data or used as input
+    if source_vel_kms == False:
+        source_vel_kms = vel_source
+        print "Velocity of source used for imaging, read from the data: "
+        print source_vel_kms
+    else:
+        print "Velocity of source used for imaging, gave by the user in the parameter.py script:"
+        source_vel_kms = source_vel_kms 
+        print source_vel_kms
     
     theorybeam = fwhmfactor*c_light*1e3/freq/diameter*180/pi*3600
     cell       = theorybeam/9.0
@@ -848,12 +870,14 @@ def imaging(source,name_line,phcenter,vel_source,source_vel_kms,vwidth_kms,chan_
     os.system('rm -Rf ALMA_TP.'+source+'.'+name_line+'.image')
     
     print "Start imaging"
+    print "Imaging from velocity "+str(start_vel)+", using "+str(nchans_vel)+" channels."
+    print "rest frequency is "+str(restfreq_ghz)+" GHz."
     sdimaging(infiles = Msnames,
         mode = 'velocity',
         nchan = nchans_vel,
         width = str(chan_dv_kms)+'km/s',
         start = str(start_vel)+'km/s',
-        veltype="radio",
+        veltype  = "radio",
         outframe = 'LSRK',
         restfreq = str(restfreq_ghz)+'GHz',
         gridfunction = 'SF',
@@ -901,7 +925,4 @@ def export_fits(name_line,source):
                fitsimage = 'ALMA_TP.'+source+'.'+name_line+'.image.fits')
     exportfits(imagename = 'ALMA_TP.'+source+'.'+name_line+'.image.weight', 
                fitsimage = 'ALMA_TP.'+source+'.'+name_line+'.image.weight.fits')
-
-
-
 
