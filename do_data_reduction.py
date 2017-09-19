@@ -8,6 +8,7 @@
 #-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
 path_script = '../script/'                                  # Path to the script folder
+path_raw    = '../raw/'                                     # Path to the raw folder
 
 exec open(path_script+'parameters.py').read()               # Parameters of an individual source for data reduction
 execfile(path_script+'ALMA_TP_data_reduction.py')           # All procedures for data reduction
@@ -25,7 +26,7 @@ do_step = [1,2,3,4,5,6,7,8]
 
 # Defining Execution Blocks (EBS) names
 if pipeline == True: 
-    EBsnames = [f for f in os.listdir('.') if f.endswith('.asdm.sdm')]
+    EBsnames = [f for f in os.listdir(path_raw) if f.endswith('.asdm.sdm')]
 else: 
     EBsnames = [f for f in os.listdir(path_script) if f.endswith('.scriptForSDCalibration.py')]
 
