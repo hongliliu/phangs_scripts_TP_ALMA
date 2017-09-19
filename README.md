@@ -29,6 +29,22 @@ To run the script, you need:
     
 4.- Check weather the data was originally reduced by ALMA with scripts or by the pipeline (check the ALMA Readme). Add this information in the "pipeline" variable in the pipeline.py file.
 
+# Directory tree
+
+The directory tree is that of any ALMA project. After untaring your files (see point 2 above), you will have:
+201X.1.00XXX.S
+└── science_goal.uid___A001_XXX_XXXX
+    └── group.uid___A001_XXX_XXXX
+        └── member.uid___A001_XXXX_XXX
+            ├── calibration
+            ├── log
+            ├── product
+            ├── qa
+            ├── raw
+            ├── script        :script folder  
+            ├── README        :This is the ALMA readme file. Read the comments from ALMA data reducer 
+
+
 
 # How to use the scripts  
 
