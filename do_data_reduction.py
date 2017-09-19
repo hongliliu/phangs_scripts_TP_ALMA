@@ -2,7 +2,7 @@
 #  Main script for TP ALMA data reduction. 
 #
 #  Please modify "do_step" with the number of the step you want to perform.
-#  To run the script, open CASA from the raw folder and do:
+#  To run the script, open CASA from the "calibration" folder and do:
 #  CASA> execfile('../script/do_data_reduction.py')
 #
 #-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
