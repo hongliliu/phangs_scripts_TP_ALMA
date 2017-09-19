@@ -1,7 +1,7 @@
 # phangs_scripts_TP_ALMA
 Scripts for Total Power (TP) ALMA data reduction and imaging.
 
-*Contains:
++ Contains +:
 
 - ALMA_TP_data_reduction.py:
   Script which contains the procedures for total power data reduction and imaging. Do not modify this script.
