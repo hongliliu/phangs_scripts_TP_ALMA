@@ -1,10 +1,10 @@
 #-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 # ALMA Total Power Data Reduction Script
 # Original ALMA calibration script modified by C. Herrera 12/01/2017
-# Do not modify.
+# Do not modify. This script is called by "do_data_reduction.py".
 # 
 # Last modifications: 
-# - 31.07.2017: read_source_coordinates
+# - 31.01.2017: read_source_coordinates
 # - 01.02.2017: More than 1 line can be defined to be excluded for baseline corrections (bug fixed 21/03/2017)
 # - 02.02.2017: Handle TOPO ALMA frame vs the given LSRK velocity for extraction of cube and baseline 
 # - 27.03.2017: extract_jyperk. It was not working for Cycle 1 data.
@@ -24,7 +24,6 @@ import numpy as np     # Support for large, multi-dimensional arrays and matrice
 import sys             # System-specific parameters and functions
 import scipy.constants # Physical constants
 
-if os.path.isdir("temp/") == False:     os.system('mkdir temp')         # folder containing temporal files
 if os.path.isdir("plots/") == False:     os.system('mkdir plots')       # folder containing all plots
 if os.path.isdir("obs_lists/") == False: os.system('mkdir obs_lists')   # folder containing all observation lists (i.e., listobs, sdlist)
 
@@ -466,7 +465,7 @@ def check_exists(filename):
     print "Checking that the original ALMA data exists"
     filename_asdm = filename[0:filename.find('.ms')]+'.asdm.sdm'
     
-    if os.path.exists(filename_asdm) == True:
+    if os.path.exists(path_raw+filename_asdm) == True:
         print "** Original ALMA data exists. **"
         return True
     else:
@@ -483,7 +482,7 @@ def import_and_split_ant(filename,doplots=False):
     print "=================================================="
     
     filename0 = filename[0:filename.find('.ms')]
-    os.system('cp -r '+filename0+'.asdm.sdm '+filename0)
+    os.system('cp -r '+path_raw+filename0+'.asdm.sdm '+filename0)
     
     # 1.1 Import of the ASDM
     print "1.1 Importing from ASDM to MS"
@@ -534,7 +533,6 @@ def import_and_split_ant(filename,doplots=False):
                  mode = 'manual',
                  antenna = str_ants,
                  action = 'apply')
-
 
     # 1.4 Split by antenna 
     fin = '.asap'
