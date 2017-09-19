@@ -53,6 +53,11 @@ For pipeline reduced data, no flag will be applied. If you whish to add addition
 
 sdflag(infile = 'uid___A002_X9998b8_X5d5.ms.PM04.asap', mode = 'manual', spw = '19:0~119;3960~4079,21:0~500;3960~4079', overwrite = True)
 
+JYPERK: 
+
+The conversion from Kelvin to Jansky is applied to the data. The conversion factor is given by ALMA in different forms for script and pipeline reduced data. For script reduced data, this information is stored in the scriptForSDCalibration.py scripts in the "script" folder. The pipeline reduced data, it will read a table, jyperk.csv, stored in the calibration folder.
+
+
 
 # Still to be done:
 
