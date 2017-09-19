@@ -34,7 +34,7 @@ To run the script, you need:
 
 Place the 3 scripts in the script folder of you ALMA data.
 
-In raw folder:
+In "calibration" folder:
 
 CASA> execfile('../script/do_data_reduction.py')
 
@@ -43,13 +43,15 @@ CASA> execfile('../script/do_data_reduction.py')
 The ALMA data can originally be reduced by JAO or any of the ARC nodes using scripts or by an automatized pipeline.
 The script makes 2 differences for these 2 kind of observations:
 
-FLAGGING: For all data, an apriori flagging is applied during step 1. This includes flags such as: mount off source, calibration device is not in correct position, power levels are not optimized, WCA not loaded. Other flags can be applied during step 2. 
+FLAGGING: 
+
+For all data, an apriori flagging is applied during step 1. This includes flags such as: mount off source, calibration device is not in correct position, power levels are not optimized, WCA not loaded. Other flags can be applied during step 2. 
+
 For data previously reduced with scripts, probably the ALMA data reducer added additional flags that are stored in the scriptForSDCalibration.py scripts in the "script" folder (their step 6). You can add additional flags here. They will be read by the script.
+
 For pipeline reduced data, no flag will be applied. If you whish to add additional flags, you need to create a file describing the flags to be done using the "sdflag" task under the name "script/file_flag_pipe.py". For intance:
-sdflag(infile = 'uid___A002_X9998b8_X5d5.ms.PM04.asap',
-  mode = 'manual',
-  spw = '19:0~119;3960~4079,21:0~500;3960~4079',
-  overwrite = True)
+
+sdflag(infile = 'uid___A002_X9998b8_X5d5.ms.PM04.asap', mode = 'manual', spw = '19:0~119;3960~4079,21:0~500;3960~4079', overwrite = True)
 
 
 # Still to be done:
