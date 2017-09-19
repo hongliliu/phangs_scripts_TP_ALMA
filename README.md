@@ -4,13 +4,16 @@ Scripts for Total Power (TP) ALMA data reduction and imaging.
 # Contains:
 
 - ALMA_TP_data_reduction.py:
+
   Script which contains the procedures for total power data reduction and imaging. Do not modify this script.
   
 - parameters.py
+
   File that contains the individual parameters for each galaxy. Modify here the parameters such as
   coordinates, velocity range, etc.
   
 - do_data_reduction.py
+
   Main script that calls the previous 2 scripts. State here the step of the data reduction that you want to perform.
   
 # What do you need?   
