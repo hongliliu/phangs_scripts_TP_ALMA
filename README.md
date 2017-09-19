@@ -27,7 +27,7 @@ To run the script, you need:
     "pipeline" variable in the pipeline.py file
 
 
-; How to use the scripts  
+# How to use the scripts  
 
 Place the 3 scripts in the script folder of you ALMA data.
 
@@ -36,7 +36,7 @@ In raw folder:
 CASA> execfile('../script/do_data_reduction.py')
 
 
-% Still to be done:
+# Still to be done:
 
 - debug when files are not found, etc.
 
