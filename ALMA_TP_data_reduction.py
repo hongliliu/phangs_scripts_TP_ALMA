@@ -926,7 +926,7 @@ def export_fits(name_line,source):
     os.system('rm -Rf ALMA_TP.'+source+'.'+name_line+'.image.fits')
     os.system('rm -Rf ALMA_TP.'+source+'.'+name_line+'.image.weight.fits')
     exportfits(imagename = 'ALMA_TP.'+source+'.'+name_line+'.image', 
-               fitsimage = 'ALMA_TP.'+source+'.'+name_line+'.image.fits')
+               fitsimage = '../product/ALMA_TP.'+source+'.'+name_line+'.image.fits')
     exportfits(imagename = 'ALMA_TP.'+source+'.'+name_line+'.image.weight', 
-               fitsimage = 'ALMA_TP.'+source+'.'+name_line+'.image.weight.fits')
+               fitsimage = '../product/ALMA_TP.'+source+'.'+name_line+'.image.weight.fits')
 
