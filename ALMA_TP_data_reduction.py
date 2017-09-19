@@ -1,15 +1,17 @@
 #-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 # ALMA Total Power Data Reduction Script
 # Original ALMA calibration script modified by C. Herrera 12/01/2017
+# Do not modify.
 # 
 # Last modifications: 
-# - read_source_coordinates 31/01/2017
-# - More than 1 line can be defined to be excluded for baseline corrections 01/02/2017 (bug fixed 21/03/2017)
-# - Handle TOPO ALMA frame vs the given LSRK velocity for extraction of cube and baseline 02/02/2017 
+# - 31.07.2017: read_source_coordinates
+# - 01.02.2017: More than 1 line can be defined to be excluded for baseline corrections (bug fixed 21/03/2017)
+# - 02.02.2017: Handle TOPO ALMA frame vs the given LSRK velocity for extraction of cube and baseline 
 # - 27.03.2017: extract_jyperk. It was not working for Cycle 1 data.
 # - 26.07.2017: add flag of 7m antennas (CM#)
 # - 26.07.2017: correct spw Tsys value associated with the averaged spw science value (tsysmap[spws_scie[i]+1] = spws_tsys[i]-> tsysmap[spws_scie[i]+1] = spws_tsys[ddif.argmin()])
 # - 26.07.2017: modified convert_vel2chan_line, because some asap files had mixed the IFs, having IFNO and IFID different.
+#
 # Still need to do:
 # - Work on errors when files are not found, etc.
 #
@@ -22,6 +24,7 @@ import numpy as np     # Support for large, multi-dimensional arrays and matrice
 import sys             # System-specific parameters and functions
 import scipy.constants # Physical constants
 
+if os.path.isdir("temp/") == False:     os.system('mkdir temp')         # folder containing temporal files
 if os.path.isdir("plots/") == False:     os.system('mkdir plots')       # folder containing all plots
 if os.path.isdir("obs_lists/") == False: os.system('mkdir obs_lists')   # folder containing all observation lists (i.e., listobs, sdlist)
 
@@ -333,8 +336,6 @@ def convert_vel2chan_line(filename_in,freq_rest,vel_line,spw_line,coords,date):
     mytb.close()
     
     freq_chan0 = freq_chanref-chanref*chan_width
-#    chan_width = bandw/nchan
-    
     chan1 = int(round((freq1_topo-freq_chan0)/chan_width))
     chan2 = int(round((freq2_topo-freq_chan0)/chan_width))
     
@@ -782,30 +783,35 @@ def concat_ants(filename,vec_ants,vel_source,freq_rest,spws_info,pipeline):
     
     # Converting from ASAP to MS
     print "6.1 Converting from ASAP to MS"
-    for ant in vec_ants :
-        os.system('rm -Rf '+filename+'.'+ant+finout)
-        sdsave(infile = filename+'.'+ant+fin,
-            outfile = filename+'.'+ant+finout,
+    lis_fils = [f for f in os.listdir(".") if f.endswith(fin) and f.startswith(filename)]
+    vec_As   = [lis_fils[i].split("ms.")[1].split(".asap")[0] for i in range(len(lis_fils))]
+    
+    for f in lis_fils : 
+        filout = f.replace(fin,finout)
+        os.system('rm -Rf '+filout)
+        sdsave(infile = f,
+            outfile = filout,
             outform='MS2')
     
     # Concatenation
     print "6.2 Concatenating antennas"
-    lis_fils = [filename+'.'+vec_ants[i]+finout for i in range(len(vec_ants))]
+    lis_fils = [f for f in os.listdir(".") if f.endswith('.ms.5') and f.startswith(filename)]
     os.system('rm -Rf '+filename+'.cal')
     concat(vis = lis_fils,concatvis = filename+'.cal')
     
     # Convert the Science Target Units from Kelvin to Jansky   
-    print " 5.3 Convert the Science Target Units from Kelvin to Jansky"
+    print " 6.3 Convert the Science Target Units from Kelvin to Jansky"
     jyperk = extract_jyperk(filename,pipeline)
     
     os.system('rm -Rf '+filename+'.cal.jy')
     os.system('cp -Rf '+filename+'.cal '+filename+'.cal.jy')
     
-    for ant in jyperk.keys():
+    for ant in vec_As:
+        print ant
         scaleAutocorr(vis=filename+'.cal.jy', scale=jyperk[ant][spw_line]['mean'], antenna=ant, spw=spw_line)
-    
+        
     # Rename line spw to spw=0
-    print "6.3 Renaming spw of line, "+str(spw_line)+" to 0"
+    print "6.4 Renaming spw of line, "+str(spw_line)+" to 0"
     fin = '.cal.jy'
     finout = '.cal.jy.tmp'
     
