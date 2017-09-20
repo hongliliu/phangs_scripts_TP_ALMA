@@ -38,9 +38,13 @@ if os.path.exists(path_au+'/analysis_scripts') == True:
     sys.path.append(path_au+'/analysis_scripts')
     import analysisUtils as aU
     es = aU.stuffForScienceDataReduction()
-    print "Specific tasks for ALMA data reduction are loaded"
+    print " Specific tasks for ALMA data reduction are loaded "
 else:
-    print "You can download the ALMA Analysis Utils scripts from: ftp://ftp.cv.nrao.edu/pub/casaguides/analysis_scripts.tar"
+    print "==========================================================="
+    print " Specific tasks for ALMA data reduction were not found!"
+    print " You can download the ALMA Analysis Utils scripts from:"
+    print " ftp://ftp.cv.nrao.edu/pub/casaguides/analysis_scripts.tar"
+    print "==========================================================="
 
 # Creating CASA tools
 def createCasaTool(mytool):
