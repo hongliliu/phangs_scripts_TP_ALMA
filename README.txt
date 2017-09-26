@@ -88,8 +88,8 @@ Additional information about the TP calibration process
 
 ###########################################################################
 
-What you have to do for galaxy ....
------------------------------------
+What you have to do for galaxy NGC_1672
+----------------------------------------
 
 1. Getting scripts:
 
