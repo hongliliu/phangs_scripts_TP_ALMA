@@ -1,7 +1,7 @@
 #-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 # ALMA Total Power Data Reduction Script
 # Original ALMA calibration script modified by C. Herrera 12/01/2017
-# Do not modify. This script is called by "do_data_reduction.py".
+# Do not modify. This script is called by "ALMA-TP-pipeline-GalName.py".
 # 
 # Last modifications: 
 # - 31.01.2017: read_source_coordinates
@@ -27,7 +27,7 @@ import glob            # Pathnames matching a specified pattern
 
 path_script = '../script/'       # Path to the script folder
 path_raw    = '../raw/'          # Path to the raw folder
-path_au     = path_script                # Path to the analysisUtils.py script
+path_au     = path_script        # Path to the analysisUtils.py script
 
 # Global variables
 c_light = scipy.constants.c/1000   # Speed of light in km/s 
@@ -262,8 +262,8 @@ def extract_flagging(filename,pipeline):
     file_flag = open(path_script+'file_flags.py', 'w')
  
     if pipeline == True: 
- 	if os.path.exists(path_script+'file_flag_pipe.py') == False:        
-	    print "No flagging will be done. If you want to flag something, please create a file ../script/file_flag_pipe.py"
+ 	if os.path.exists(path_script+'fileflag.py') == False:        
+	    print "No flagging will be done. If you want to flag something, please create a file ../script/fileflag.py"
             print "with the specific flags using the task sdflag."	
             print "Example: "
             print "sdflag(infile = 'uid___A002_X9998b8_X5d5.ms.PM04.asap',"
@@ -271,8 +271,8 @@ def extract_flagging(filename,pipeline):
             print "  spw = '19:0~119;3960~4079,21:0~500;3960~4079',"
             print "  overwrite = True)"
         else:
-            print "Reading file "+path_script++"file_flag_pipe.py for flagging"
-            file_script = path_script+'file_flag_pipe.py'
+            print "Reading file "+path_script+"fileflag.py for flagging"
+            file_script = path_script+'fileflag.py'
             with open(file_script) as f: lines_f = f.readlines()
             for i in range(len(lines_f)): file_flag.write(lines_f[i])
             print "Flags saved in "+path_script+"file_flags.py"
