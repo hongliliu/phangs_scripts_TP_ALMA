@@ -983,6 +983,9 @@ if pipeline == True:
 else: 
     EBsnames = [f for f in os.listdir(path_script) if f.endswith('.scriptForSDCalibration.py')]
 
+if 'EBexclude' in globals(): 
+   EBsnames = [s for s in EBsnames if EBexclude not in s]
+
 if len(do_step) == 0: do_step = [1,2,3,4,5,6,7,8]
 
 # Do data reduction for each EB 
