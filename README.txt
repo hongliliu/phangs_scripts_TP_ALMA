@@ -27,7 +27,7 @@ To do this, the sources are spread in three files:
 
   - analysis_scripts
     ALMA provided folder that cointains different tools to be used during the TP
-    ALMA data reduction. You should not modify this script.
+    ALMA data reduction. You should not modify any of the scripts in this folder.
 
 ###########################################################################
 
@@ -93,7 +93,7 @@ What you have to do for galaxy NGC_1672
 
 1. Getting scripts:
 
-   - Download the zip file from the github and unzip it (Green botom: Clone or download).
+   - Download the zip file from the Github (Green botom "Clone or download" in Github).
     
 2. Getting the data
 
@@ -140,7 +140,8 @@ What you have to do for galaxy NGC_1672
 
      - Two additional folders will be created in the calibration folder: "plots" and "obs_lists"
 
-       PLOTS folder: This folder contains all plots created by the data reduction scripts. For instance, the Tsys and the baseline correction plots. Using such plots, you can judge the quality of the data.
+       PLOTS folder: This folder contains all plots created by the data reduction scripts. For instance, 
+       the Tsys and the baseline correction plots. Using such plots, you can judge the quality of the data.
        OBS_LISTS folder: This folder contains the observation lists of the data.
 
 ###########################################################################
