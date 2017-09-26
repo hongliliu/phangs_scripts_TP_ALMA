@@ -24,6 +24,7 @@ chan_dv_kms    = 2.5
 freq_rest_im   = freq_rest/1e3                  # rest frequency in GHz for imaging
 name_line      = 'CO21.v0p2'                    # Name of the line, to be used for naming the files
 
+EBexclude      = 'uid___A002_Xb7d0ee_X9777'     # Exclude this EB, conversion to MS cannot be done.
 
 #-----------------------------------------------
 # Steps of data reduction you want to perform:
