@@ -908,7 +908,7 @@ def imaging(source,name_line,phcenter,vel_source,source_vel_kms,vwidth_kms,chan_
     
     print "Start imaging"
     print "Imaging from velocity "+str(start_vel)+", using "+str(nchans_vel)+" channels."
-    print "rest frequency is "+str(restfreq_ghz)+" GHz."
+    print "rest frequency is "+str(freq_rest_im)+" GHz."
     sdimaging(infiles = Msnames,
         mode = 'velocity',
         nchan = nchans_vel,
@@ -916,7 +916,7 @@ def imaging(source,name_line,phcenter,vel_source,source_vel_kms,vwidth_kms,chan_
         start = str(start_vel)+'km/s',
         veltype  = "radio",
         outframe = 'LSRK',
-        restfreq = str(restfreq_ghz)+'GHz',
+        restfreq = str(freq_rest_im)+'GHz',
         gridfunction = 'SF',
         convsupport = 6,
         phasecenter = coord_phase,
