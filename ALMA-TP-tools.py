@@ -856,7 +856,7 @@ def concat_ants(filename,vec_ants,vel_source,freq_rest,spws_info,pipeline):
 #-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 # Step 7 - Imaging
 #-*-*-*-*-*-*-*-*-*-*
-def imaging(source,name_line,phcenter,vel_source,source_vel_kms,vwidth_kms,chan_dv_kms,freq_rest_im,doplots=False,doEBs=0):
+def imaging(source,name_line,phcenter,vel_source,source_vel_kms,vwidth_kms,chan_dv_kms,freq_rest_im,doplots=False):
     
     print "===================="
     print "= Step 7 - Imaging ="
@@ -868,9 +868,6 @@ def imaging(source,name_line,phcenter,vel_source,source_vel_kms,vwidth_kms,chan_
     # Search for files already calibrated
     path = '.'
     Msnames = [f for f in os.listdir(path) if f.endswith('.cal.jy')]
-       
-    # Check how many EBs you want to use
-    if doEBs !=0 : Msnames = Msnames[0:doEBs]
     
     # Definition of parameters for imaging
     xSampling,ySampling,maxsize = aU.getTPSampling(Msnames[0],showplot=False)
@@ -1009,5 +1006,5 @@ for EBs in EBsnames:
             if 5 in do_step: baseline(filename,source,ant,freq_rest,vel_source,spws_info,vel_line,bl_order)   
         if 6 in do_step: concat_ants(filename,vec_ants,vel_source,freq_rest,spws_info,pipeline)  
                        
-if 7 in do_step: imaging(source,name_line,phase_center,vel_source,source_vel_kms,vwidth_kms,chan_dv_kms,freq_rest_im,doplots,doEBs)
+if 7 in do_step: imaging(source,name_line,phase_center,vel_source,source_vel_kms,vwidth_kms,chan_dv_kms,freq_rest_im,doplots)
 if 8 in do_step: export_fits(name_line,source)
